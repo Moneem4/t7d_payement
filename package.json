@@ -1,0 +1,26 @@
+{
+  "name": "t7d",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "node app.js",
+    "sonar":"sonar-scanner -D project.settings=./payment.properties",
+    "dev": "nodemon app.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@elastic/ecs-morgan-format": "^1.1.0",
+    "amqplib": "^0.8.0",
+    "axios": "^0.24.0",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "dotenv": "^10.0.0",
+    "express": "^4.17.1",
+    "mongoose": "^6.0.14",
+    "mongoose-encryption": "^2.1.2",
+    "morgan": "^1.10.0",
+    "nodemon": "^2.0.15"
+  }
+}

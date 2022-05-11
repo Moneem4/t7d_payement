@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  namespace: t7d
+  name: t7d-payment
+  labels:
+    app: t7d-payment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: t7d-payment
+  template:
+    metadata:
+      labels:
+        app:  t7d-payment
+    spec:
+      imagePullSecrets:
+        - name: nexus-keys
+      containers:
+        - name: t7d-profile
+          image: docker.galactechstudio.com/t7d-payment:latest
+          imagePullPolicy: Always
+          ports:
+            - containerPort: 3000
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: t7d
+  name: t7d-payment
+spec:
+  selector:
+    app: t7d-payment
+  ports:
+    - protocol: TCP
+      port: 30002
+      targetPort: 3000
+---
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  namespace: t7d
+  name: t7d-payment
+  annotations:
+    kubernetes.io/ingress.class: nginx
+    cert-manager.io/cluster-issuer: letsencrypt
+spec:
+  tls:
+  - hosts:
+    - payment.galactechstudio.com
+    secretName: tls-t7d-payment
+  rules:
+  - host: payment.galactechstudio.com
+    http:
+      paths:
+      - path: /
+        pathType: Prefix
+        backend:
+          service:
+            name: t7d-payment
+            port:
+              number: 30002
