@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
 
 
-const scores = mongoose.Schema(
+const wallet = mongoose.Schema(
     {
         profile_id:{type:String,required: true},
-        accountBalance: { type: Double  },
-        GDBalance: { type: String },
+        accountBalance: { type: Number  },
+        GDBalance: { type: Number },
         currency: { type: String,enum: ['USD', 'EURO'] },
     },
   { timestamps: true }
@@ -13,4 +13,4 @@ const scores = mongoose.Schema(
 
 
 
-module.exports  = mongoose.model('scores', scores);
+module.exports  = mongoose.model('wallet', wallet);
