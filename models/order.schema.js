@@ -1,15 +1,17 @@
 const mongoose = require('mongoose');
 
 
-const scores = mongoose.Schema(
+const orders = mongoose.Schema(
   {
     profile_id: {type: String,required: true},
-    paymentData: {type: String,required: true},
-    products: [{ type: mongoose.Schema.Types.ObjectId }],
+    paymentData: {type: Object,required: true},
+    products: [{ giftCardId:{type: mongoose.Schema.Types.ObjectId},supplements:{type:Object} }],
   },
   { timestamps: true }
 );
 
 
+module.exports  = mongoose.model('orders', orders);
 
-module.exports  = mongoose.model('scores', scores);
+
+

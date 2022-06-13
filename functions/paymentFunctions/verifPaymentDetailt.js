@@ -3,7 +3,8 @@ const rpt = require('../global_functions/returnPromiseForItem')
 
 
  function  verifPaymentDetailt (paimentId, CartDataAfterDiscount) {
-    const PaymentData = getPaymentData(paimentId)
+     const PaymentData = getPaymentData(paimentId)
+     CartDataAfterDiscount=[...CartDataAfterDiscount]
     const totalOfCart =  CartDataAfterDiscount.filter(e => e != false).reduce((total, currentValue, index,array) => {
         if (index + 1 === array.length) {
                return Promise.resolve(total + currentValue.priceAfterDiscount)
@@ -12,6 +13,7 @@ const rpt = require('../global_functions/returnPromiseForItem')
         }
     }, 0)
      return totalOfCart.then(data => {
+       //  console.log(PaymentData.amount,data)
      if(PaymentData.amount === data)
      {
             return Promise.resolve({
@@ -35,7 +37,7 @@ module.exports = verifPaymentDetailt
 
 function getPaymentData(paimentId){
     return {
-        "amount": 339.5,
+        "amount": 550,
         "provided":"x"
     }
 }

@@ -7,12 +7,16 @@ const getProduct = require('../functions/global_functions/getProduct');
 const getCartDataAfterDiscount = require('../functions/global_functions/getCartDataAfterDiscount');
 const getCartData = require('../functions/global_functions/getCartData');
 const rechargeWallet= require('../functions/walletFunctions/rechargeWallet')
-
+const getGiftCardVoucherAndCreateOrder = require('../functions/voucherFunctions/getGiftCardVoucher');
+const { default: axios } = require('axios');
 
 
 
 exports.makeTranscationOforder = async (req, res) => {
-  if (validator(req.body, ['paymentMethod',"typeOfPurchase"], res)) { return; }
+  try {
+    
+  
+  if (validator(req.body, ['paymentMethod', "typeOfPurchase"], res)) { return; }
   const { paymentMethod, typeOfPurchase } = req.body
   if ((typeOfPurchase !== 'wallet') && (typeOfPurchase !== 'voucher')) {
     display_costume_error(res, 'error in typeOfPurchase ', 400);
@@ -36,57 +40,46 @@ exports.makeTranscationOforder = async (req, res) => {
   //check if payment is equal to card total
   Promise.all(CartDataAfterDiscount).then(async CartDataAfterDiscountAfterWatingToProcces => {
     let paymetnData = await verifPaymentDetailt(req.body.paimentId, CartDataAfterDiscountAfterWatingToProcces)
-      if (paymetnData.transactionState === true) {
-        if (paymentMethod === 'card') {
-          if (typeOfPurchase === 'voucher') {
-              
-          } else {
-            let response =  await rechargeWallet(req, paymetnData.amount, res)
-              res.status(res.statusCode).json({...response});
-          }
-        } else {
-              if (typeOfPurchase === 'voucher') {
-              
-          } else {
-            
-          }
-        }
-        } else {
-          display_costume_error(res, 'error transaction', 400);
+    
+    if (paymetnData.transactionState === true) {
+      if (paymentMethod === 'card') {
+        if (typeOfPurchase === 'voucher') {
+          const awaitVoucher = await getGiftCardVoucherAndCreateOrder(CartDataAfterDiscountAfterWatingToProcces, paymetnData, req.verified.profileId)
+          const finalData = await Promise.all(awaitVoucher)
+          orderModelSaved = orderModelCreation(req.verified.profileId, paymetnData, finalData.map(e => e.products))
+          await orderModelSaved.save()
+          axios.delete('https://staging.products.t7d.io/cart/emptyCart',{profileId:req.verified.profileId}) ///empty cart after payment
+          res.status(res.statusCode).json({ message: "order complete", });
 
-        }
-  })
-
-  /*try {
-  
-  const cart = await axios.get('https://staging.products.t7d.io/cart/getFromCart',
-    {headers: {
-    'Authorization': `${req.headers.authorization}` 
-  }}
-    )*/
-
-   // console.log(orderids)
-   /* productKey = getProduct()
-   if (productKey !== false) {
-     if (makePayment() === true) {  
-          
         } else {
-        display_costume_error(res, 'error transaction', 400);
+          let response = await rechargeWallet(req, paymetnData.amount, res)
+          res.status(res.statusCode).json({ ...response });
         }
+      } else {
+        if (typeOfPurchase === 'voucher') {
+          const awaitVoucher = await getGiftCardVoucherAndCreateOrder(CartDataAfterDiscountAfterWatingToProcces, paymetnData, req.verified.profileId)
+          const finalData = await Promise.all(awaitVoucher)
+          orderModelSaved = orderModelCreation(req.verified.profileId, paymetnData, finalData.map(e => e.products))
+          await orderModelSaved.save()
+          axios.delete('https://staging.products.t7d.io/cart/emptyCart',{profileId:req.verified.profileId}) ///empty cart after payment
+          res.status(res.statusCode).json({message: "order complete",});
+        }
+      }
     } else {
-       display_costume_error(res, 'product not available transaction', 400);
+      display_costume_error(res, 'error transaction', 400);
+
     }
-
-        res.status(res.statusCode).json({
-          message: 'the payment was successfully made',
-        });
+  })
   } catch (error) {
-          display_error_message(res, error);
-
-    }*/
+      display_error_message(res, error)
+}
 }
 
 
-
-
-
+const orderModelCreation = (profile_id, paymentData, products) => {
+    return new orderModel({
+      profile_id,
+      paymentData,
+      products: [...products.map(e => { return {giftCardId:e.giftCardId,supplements:{sku:e.supplements.sku,voucherKey:e.supplements.voucherKey.data.data}}})]
+    });
+}
