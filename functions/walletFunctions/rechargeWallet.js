@@ -20,7 +20,7 @@ module.exports = rechargeWallet = async (req, amount,res) => {
             }).catch(async error => {
                 let WalletHistory = createWalletHistoryModel(req.verified.profileId,WalletModel._id,amount,"ok","problem in refling wallet")
                  walletHistorySaved = await WalletHistory.save()
-                 returnMessage = {state: true,message:'problem in refling wallet'}
+                 returnMessage = {state: true,message:error.message}
             })
         } else {
 
@@ -32,7 +32,7 @@ module.exports = rechargeWallet = async (req, amount,res) => {
             }).catch(async error => {
                 let WalletHistory = createWalletHistoryModel(req.verified.profileId,wallet._id,amount,"ok","problem in refling wallet")
                  walletHistorySaved = await WalletHistory.save()
-                 returnMessage = {state: true,message:'problem in refling wallet'}
+                 returnMessage = {state: true,message:error.message}
             })
         }
         return Promise.resolve(returnMessage)

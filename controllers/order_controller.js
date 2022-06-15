@@ -38,37 +38,50 @@ exports.makeTranscationOforder = async (req, res) => {
   const CartDataAfterDiscount = getCartDataAfterDiscount(cart, req)
 
   //check if payment is equal to card total
-  Promise.all(CartDataAfterDiscount).then(async CartDataAfterDiscountAfterWatingToProcces => {
-    let paymetnData = await verifPaymentDetailt(req.body.paimentId, CartDataAfterDiscountAfterWatingToProcces)
-    
-    if (paymetnData.transactionState === true) {
-      if (paymentMethod === 'card') {
-        if (typeOfPurchase === 'voucher') {
-          const awaitVoucher = await getGiftCardVoucherAndCreateOrder(CartDataAfterDiscountAfterWatingToProcces, paymetnData, req.verified.profileId)
-          const finalData = await Promise.all(awaitVoucher)
-          orderModelSaved = orderModelCreation(req.verified.profileId, paymetnData, finalData.map(e => e.products))
-          await orderModelSaved.save()
-          axios.delete('https://staging.products.t7d.io/cart/emptyCart',{profileId:req.verified.profileId}) ///empty cart after payment
-          res.status(res.statusCode).json({ message: "order complete", });
+    Promise.all(CartDataAfterDiscount).then(async CartDataAfterDiscountAfterWatingToProcces => {
+      try {
+          let paymetnData = await verifPaymentDetailt(req.body.paimentId, CartDataAfterDiscountAfterWatingToProcces,typeOfPurchase,req.body.amount,req)
+        if (paymetnData.transactionState === true) {
+            if (paymentMethod === 'card') {
+              if (typeOfPurchase === 'voucher') {
+                //
+                const awaitVoucher = await getGiftCardVoucherAndCreateOrder(CartDataAfterDiscountAfterWatingToProcces, paymetnData, req.verified.profileId)
+                const finalData = await Promise.all(awaitVoucher)
+                orderModelSaved = orderModelCreation(req.verified.profileId, paymetnData, finalData.map(e => e.products))
+                await orderModelSaved.save()
+                axios.delete('https://staging.products.t7d.io/cart/emptyCart',{ headers: {'Authorization': `${req.headers.authorization}` }
+                },{ profileId: req.verified.profileId }).then(() => {
+                      res.status(res.statusCode).json({ message: "order complete" })
+                }).catch(error => {
+                        display_error_message(res, error)
+                }) ///empty cart after payment
 
-        } else {
-          let response = await rechargeWallet(req, paymetnData.amount, res)
-          res.status(res.statusCode).json({ ...response });
-        }
-      } else {
-        if (typeOfPurchase === 'voucher') {
-          const awaitVoucher = await getGiftCardVoucherAndCreateOrder(CartDataAfterDiscountAfterWatingToProcces, paymetnData, req.verified.profileId)
-          const finalData = await Promise.all(awaitVoucher)
-          orderModelSaved = orderModelCreation(req.verified.profileId, paymetnData, finalData.map(e => e.products))
-          await orderModelSaved.save()
-          axios.delete('https://staging.products.t7d.io/cart/emptyCart',{profileId:req.verified.profileId}) ///empty cart after payment
-          res.status(res.statusCode).json({message: "order complete",});
-        }
-      }
-    } else {
-      display_costume_error(res, 'error transaction', 400);
-
+              } else {
+                let response = await rechargeWallet(req, paymetnData.amount, res)
+                res.status(res.statusCode).json({ ...response });
+              }
+            } else {
+              if (typeOfPurchase === 'voucher') {
+                const awaitVoucher = await getGiftCardVoucherAndCreateOrder(CartDataAfterDiscountAfterWatingToProcces, paymetnData, req.verified.profileId)
+                const finalData = await Promise.all(awaitVoucher)
+                orderModelSaved = orderModelCreation(req.verified.profileId, paymetnData, finalData.map(e => e.products))
+                await orderModelSaved.save()
+                axios.delete('https://staging.products.t7d.io/cart/emptyCart',{ headers: {'Authorization': `${req.headers.authorization}` }
+                },{ profileId: req.verified.profileId }).then(() => {
+                      res.status(res.statusCode).json({ message: "order complete" })
+                }).catch(error => {
+                        display_error_message(res, error)
+                }) ///empty cart after payment
+              }
+            }
+          } else {
+            display_costume_error(res, 'error transaction', 400);
+          }
+      } catch (error) {
+        display_costume_error(res, error, 400);
     }
+    
+
   })
   } catch (error) {
       display_error_message(res, error)
