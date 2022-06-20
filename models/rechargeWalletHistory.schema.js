@@ -7,7 +7,8 @@ const rechargeWalletHistory = mongoose.Schema(
         wallet_id:{type:String,required: true},
         amount: { type: Number },
         state: {type:String},
-        errorMessage:{type:String}
+        errorMessage: { type: String },
+        paymentData:{type:Object}
     },
   { timestamps: true }
 );

@@ -13,6 +13,7 @@ app.use(morgan('dev'))
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }))
 app.use('/orders', order_route);
+app.use('/wallet', wallet_route);
 //app.use('/wallet', wallet_route);
 
 app.use((req, res) => {

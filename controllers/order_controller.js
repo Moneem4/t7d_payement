@@ -57,7 +57,7 @@ exports.makeTranscationOforder = async (req, res) => {
                 }) ///empty cart after payment
 
               } else {
-                let response = await rechargeWallet(req, paymetnData.amount, res)
+                let response = await rechargeWallet(req, paymetnData.amount, res,paymetnData)
                 res.status(res.statusCode).json({ ...response });
               }
             } else {

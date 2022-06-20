@@ -3,7 +3,7 @@ const RechargeWalletHistory = require('../../models/rechargeWalletHistory.schema
 const Wallet = require('../../models/wallet.schema')
 const {display_error_message} = require('../../functions/global_functions/display_error_message');
 
-module.exports = rechargeWallet = async (req, amount,res) => {
+module.exports = rechargeWallet = async (req, amount,res,paymetnData) => {
     let returnMessage
     let walletHistorySaved
     try {
@@ -14,11 +14,11 @@ module.exports = rechargeWallet = async (req, amount,res) => {
 
             await WalletModel.save().then(async () => {
 
-                 let WalletHistory = createWalletHistoryModel(req.verified.profileId,WalletModel._id,amount,"ok","wallet was recharged")
+                 let WalletHistory = createWalletHistoryModel(req.verified.profileId,WalletModel._id,amount,"ok","wallet was recharged",paymetnData)
                   walletHistorySaved = await WalletHistory.save()
                 returnMessage = { state: true, message: 'wallet was recharged' }
             }).catch(async error => {
-                let WalletHistory = createWalletHistoryModel(req.verified.profileId,WalletModel._id,amount,"ok","problem in refling wallet")
+                let WalletHistory = createWalletHistoryModel(req.verified.profileId,WalletModel._id,amount,"ok","problem in refling wallet",paymetnData)
                  walletHistorySaved = await WalletHistory.save()
                  returnMessage = {state: true,message:error.message}
             })
@@ -26,11 +26,11 @@ module.exports = rechargeWallet = async (req, amount,res) => {
 
             wallet.accountBalance = wallet.accountBalance + amount
                await wallet.save().then(async () => {
-                 let WalletHistory = createWalletHistoryModel(req.verified.profileId,wallet._id,amount,"ok","wallet was recharged")
+                 let WalletHistory = createWalletHistoryModel(req.verified.profileId,wallet._id,amount,"ok","wallet was recharged",paymetnData)
                   walletHistorySaved = await WalletHistory.save()
                  returnMessage = {state: true,message:'wallet was recharged'}
             }).catch(async error => {
-                let WalletHistory = createWalletHistoryModel(req.verified.profileId,wallet._id,amount,"ok","problem in refling wallet")
+                let WalletHistory = createWalletHistoryModel(req.verified.profileId,wallet._id,amount,"ok","problem in refling wallet",paymetnData)
                  walletHistorySaved = await WalletHistory.save()
                  returnMessage = {state: true,message:error.message}
             })
@@ -55,13 +55,14 @@ const createWalletModel = (profileid,amount) => {
       currency:'USD'
     });
 }
-const createWalletHistoryModel = (profileid,wallet_id,amount,state,errorMessage) => {
+const createWalletHistoryModel = (profileid,wallet_id,amount,state,errorMessage,paymetnData) => {
     return new RechargeWalletHistory({
       profile_id:profileid,
       wallet_id:wallet_id,
       amount: amount,
       state,
-      errorMessage
+      errorMessage,
+      paymentData:paymetnData
     });
 }
 

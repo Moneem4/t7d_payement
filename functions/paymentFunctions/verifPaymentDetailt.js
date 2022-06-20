@@ -2,7 +2,7 @@
 const rpt = require('../global_functions/returnPromiseForItem')
 const axios = require('axios')
 const {display_error_message} = require('../../functions/global_functions/display_error_message');
-
+const checkout = require('../paymentsProviders/checkout')
  function verifPaymentDetailt(paimentId, CartDataAfterDiscount, typeOfPurchase, amount, req,res,token) {
     try {
         
@@ -32,43 +32,10 @@ module.exports = verifPaymentDetailt
 const  rechargeWallet = async (req,amount) => {
     try {
 
-        const checkout = await axios.post('https://api.sandbox.checkout.com/payments',
-         {
-            "source": {
-                "type": "token",
-                "token": req.body.token
-            },
-            "amount": amount,
-            "currency": "USD"
-        }
-        , {
-            headers: {'Authorization': `${process.env.AUTH_TOKEN}` }
-        }
-        )
-        if (checkout.status === 201) {
-            if (checkout.data.approved === true) {
-                return Promise.resolve({
-                "amount": amount,
-                id:checkout.data.id,
-                transactionState: true
-            })
-            } else {
-                return Promise.resolve({
-                "amount": amount,
-                id:checkout.data.id,
-                transactionState: false
-            })
-            }
-        } else {
-            return Promise.resolve({
-                "amount": amount,
-                id:checkout.data.id,
-                transactionState: false
-            })
-        }
+        return  checkout(req,amount)
 
         } catch (error) {
-            return Promise.reject(error.message)
+            return Promise.reject(error)
         }
    
 }
@@ -85,41 +52,8 @@ const payVoucher = () => {
         }
     }, 0)
     
-         return totalOfCart.then(async data => {
-        const checkout = await axios.post('https://api.sandbox.checkout.com/payments',
-         {
-            "source": {
-                "type": "token",
-                "token": req.body.token
-            },
-            "amount": data,
-            "currency": "USD"
-        }
-        , {
-            headers: {'Authorization': `${process.env.AUTH_TOKEN}` }
-        }
-        )
-        if (checkout.status === 201) {
-            if (checkout.data.approved === true) {
-                return Promise.resolve({
-                id: checkout.data.id,
-                "amount": amount,
-                transactionState: true
-            })
-            } else {
-                return Promise.resolve({
-                id: checkout.data.id,
-                "amount": amount,
-                transactionState: false
-            })
-            }
-        } else {
-               return Promise.resolve({
-                 id: checkout.data.id,
-                "amount": amount,
-                transactionState: false
-            })
-        }
+         return totalOfCart.then(async amount => {
+            return  checkout(req,amount)
 
     })  
      } else {
