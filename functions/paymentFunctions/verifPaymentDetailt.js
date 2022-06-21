@@ -31,7 +31,6 @@ module.exports = verifPaymentDetailt
 
 const  rechargeWallet = async (req,amount) => {
     try {
-
         return  checkout(req,amount)
 
         } catch (error) {

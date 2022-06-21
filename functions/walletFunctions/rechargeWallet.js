@@ -1,4 +1,3 @@
-const mongoose = require('mongoose');
 const RechargeWalletHistory = require('../../models/rechargeWalletHistory.schema')
 const Wallet = require('../../models/wallet.schema')
 const {display_error_message} = require('../../functions/global_functions/display_error_message');

@@ -33,7 +33,6 @@ exports.makeTranscationOforder = async (req, res) => {
 
   //get user cart info
   const cart = await getCartData(req) //get user cart info
-  console.log(cart)
   //get cart date after calculating discount
   const CartDataAfterDiscount = getCartDataAfterDiscount(cart, req)
 
@@ -82,6 +81,8 @@ exports.makeTranscationOforder = async (req, res) => {
           }
           }
       } catch (error) {
+                
+
         display_costume_error(res, error, 400);
     }
     
