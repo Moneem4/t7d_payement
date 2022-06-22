@@ -1,8 +1,9 @@
 
-const rpt = require('../global_functions/returnPromiseForItem')
-const axios = require('axios')
-const {display_error_message} = require('../../functions/global_functions/display_error_message');
 const checkout = require('../paymentsProviders/checkout')
+const wallet = require('../../models/wallet.schema')
+const checkoutFromWallet = require('../../functions/paymentsProviders/checkoutFromWallet')
+const mongoose = require('mongoose');
+
  function verifPaymentDetailt(paimentId, CartDataAfterDiscount, typeOfPurchase, amount, req,res,token) {
     try {
         
@@ -14,7 +15,7 @@ const checkout = require('../paymentsProviders/checkout')
             return rechargeWallet(req,amount)
          }
     } else {
-            return payVoucher(req)
+            return payVoucher(CartDataAfterDiscount,req)
      }
     } catch (error) {
          return Promise.reject(error.message)
@@ -40,7 +41,8 @@ const  rechargeWallet = async (req,amount) => {
 }
 
 
-const payVoucher = () => {
+const payVoucher = async (CartDataAfterDiscount,req) => {
+
     CartDataAfterDiscount = [...CartDataAfterDiscount]
      if (CartDataAfterDiscount.length !== 0) {
           const totalOfCart =  CartDataAfterDiscount.filter(e => e != false).reduce((total, currentValue, index,array) => {
@@ -50,13 +52,23 @@ const payVoucher = () => {
                 return total + currentValue.priceAfterDiscount
         }
     }, 0)
-    
-         return totalOfCart.then(async amount => {
-            return  checkout(req,amount)
+    if(req.body.typeOfPurchase === 'voucher' && req.body.paymentMethod === 'wallet'){
+       const walletData = await wallet.findOne({profile_id:mongoose.Types.ObjectId(req.verified.profileId)})
+       return totalOfCart.then(async amount => {
+        return  checkoutFromWallet(walletData,amount,req)
+        })  
+    }else{
+            return totalOfCart.then(async amount => {
+                return  checkout(req,amount)
+        })  
+    }
 
-    })  
      } else {
-            return Promise.reject(error.message)
+            return Promise.reject('your card is empty')
     }
 
 }
+
+
+
+

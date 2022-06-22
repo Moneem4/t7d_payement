@@ -1,8 +1,16 @@
 exports.display_costume_error = (res, error) => {
-  console.log(error)
-  res.status(res.statusCode).json({
-    error: true,
-    message: error.message === undefined ? error  : error.message
-    
-  })
+  if(error.response !== undefined && error.response.data){
+    res.status(res.statusCode).json({
+      error: true,
+      message: error.response.data
+      
+    })
+  }else{
+    res.status(res.statusCode).json({
+      error: true,
+      message: error.message === undefined ? error  : error.message
+      
+    })
+  }
+
 }

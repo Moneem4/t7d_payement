@@ -39,16 +39,16 @@ exports.makeTranscationOforder = async (req, res) => {
   //check if payment is equal to card total
     Promise.all(CartDataAfterDiscount).then(async CartDataAfterDiscountAfterWatingToProcces => {
       try {
-          let paymetnData = await verifPaymentDetailt(req.body.paimentId, CartDataAfterDiscountAfterWatingToProcces,typeOfPurchase,req.body.amount,req)
+          let paymetnData = await verifPaymentDetailt(req.body.paimentId, CartDataAfterDiscountAfterWatingToProcces,typeOfPurchase,req.body.amount,req) //check payment if succes or not 
         if (paymetnData.transactionState === true) {
             if (paymentMethod === 'card') {
               if (typeOfPurchase === 'voucher') {
                 //
-                const awaitVoucher = await getGiftCardVoucherAndCreateOrder(CartDataAfterDiscountAfterWatingToProcces, paymetnData, req.verified.profileId)
-                const finalData = await Promise.all(awaitVoucher)
-                orderModelSaved = orderModelCreation(req.verified.profileId, paymetnData, finalData.map(e => e.products))
-                await orderModelSaved.save()
-                axios.delete('https://staging.products.t7d.io/cart/emptyCart',{ headers: {'Authorization': `${req.headers.authorization}` }
+                const awaitVoucher = await getGiftCardVoucherAndCreateOrder(CartDataAfterDiscountAfterWatingToProcces, paymetnData, req.verified.profileId) //get vouchers return array of promises
+                const finalData = await Promise.all(awaitVoucher) //get data from prev propmes
+                orderModelSaved = orderModelCreation(req.verified.profileId, paymetnData, finalData.map(e => e.products)) //create order
+                await orderModelSaved.save() //save order
+                axios.delete('https://staging.products.t7d.io/cart/emptyCart',{ headers: {'Authorization': `${req.headers.authorization}` } //empty user card
                 },{ profileId: req.verified.profileId }).then(() => {
                       res.status(res.statusCode).json({ message: "order complete" })
                 }).catch(error => {
@@ -56,18 +56,19 @@ exports.makeTranscationOforder = async (req, res) => {
                 }) ///empty cart after payment
 
               } else {
-                let response = await rechargeWallet(req, paymetnData.amount, res,paymetnData)
+                let response = await rechargeWallet(req, paymetnData.amount, res,paymetnData) 
                 res.status(res.statusCode).json({ ...response });
               }
             } else {
               if (typeOfPurchase === 'voucher') {
+
                 const awaitVoucher = await getGiftCardVoucherAndCreateOrder(CartDataAfterDiscountAfterWatingToProcces, paymetnData, req.verified.profileId)
                 const finalData = await Promise.all(awaitVoucher)
                 orderModelSaved = orderModelCreation(req.verified.profileId, paymetnData, finalData.map(e => e.products))
                 await orderModelSaved.save()
                 axios.delete('https://staging.products.t7d.io/cart/emptyCart',{ headers: {'Authorization': `${req.headers.authorization}` }
                 },{ profileId: req.verified.profileId }).then(() => {
-                      res.status(res.statusCode).json({ message: "order complete" })
+                      res.status(res.statusCode).json({ message: "order complete",products:finalData.map(e => e.products.supplements.voucherKey.data.data) })
                 }).catch(error => {
                         display_error_message(res, error)
                 }) ///empty cart after payment
